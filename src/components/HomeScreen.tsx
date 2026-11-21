@@ -21,8 +21,8 @@ export function HomeScreen({
   return (
     <div className="space-y-14 sm:space-y-16">
       {/* 1. Hero Proposition */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
-        <div className="lg:col-span-7 flex flex-col justify-center space-y-5">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+        <div className="lg:col-span-6 flex flex-col justify-center space-y-5">
           <div className="flex items-center gap-3">
             <img
               src={LOGO_URL}
@@ -35,7 +35,7 @@ export function HomeScreen({
             </p>
           </div>
 
-          <h1 className="font-display text-[2.25rem] sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[#1A211D] text-balance leading-[1.08]">
+          <h1 className="font-display text-[2.25rem] sm:text-5xl lg:text-[3.1rem] font-bold tracking-tight text-[#1A211D] text-balance leading-[1.08]">
             Cook what is already in your fridge before break.
           </h1>
 
@@ -72,22 +72,22 @@ export function HomeScreen({
           </div>
         </div>
 
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-6">
           {heroImgFailed ? (
-            <div className="aspect-[4/3] lg:h-full w-full rounded-2xl border border-[#E2DDD2] bg-gradient-to-br from-[#EDF5F0] to-[#EAE4D7] flex flex-col items-center justify-center gap-2 p-6 text-center">
+            <div className="aspect-[4/3] w-full rounded-2xl border border-[#E2DDD2] bg-gradient-to-br from-[#EDF5F0] to-[#EAE4D7] flex flex-col items-center justify-center gap-2 p-6 text-center">
               <Utensils className="w-8 h-8 text-[#2D6A4F]" />
               <span className="font-display text-sm font-semibold text-[#1B4332]">
                 Shared fridge ingredients ready to cook
               </span>
             </div>
           ) : (
-            <div className="aspect-[4/3] lg:aspect-auto lg:h-full w-full overflow-hidden rounded-2xl border border-[#E2DDD2] bg-[#ECE7DC]">
+            <div className="w-full overflow-hidden rounded-2xl border border-[#E2DDD2] bg-[#FCF4DF]">
               <img
                 src={HERO_IMAGE_URL}
-                alt="Fresh spinach, brown eggs, cheddar cheese, tortillas, garlic, and a frying pan on a wooden kitchen counter"
+                alt="Cartoon illustration of fresh spinach, eggs, cheddar cheese, tortillas, garlic, and a smiling frying pan"
                 referrerPolicy="no-referrer"
                 onError={() => setHeroImgFailed(true)}
-                className="w-full h-full object-cover"
+                className="w-full h-auto object-contain block"
               />
             </div>
           )}
