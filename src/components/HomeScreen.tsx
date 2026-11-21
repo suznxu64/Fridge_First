@@ -22,22 +22,26 @@ export function HomeScreen({
     <div className="space-y-14 sm:space-y-16">
       {/* 1. Hero Proposition */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-        <div className="lg:col-span-6 flex flex-col justify-center space-y-5">
-          <div className="flex items-center gap-3">
+        <div className="lg:col-span-6 flex flex-col justify-center space-y-4">
+          <div className="sm:hidden">
             <img
               src={LOGO_URL}
               alt="What The Fridge mascot logo"
               referrerPolicy="no-referrer"
-              className="h-12 w-auto object-contain shrink-0 sm:hidden"
+              className="h-16 w-auto object-contain"
             />
-            <p className="text-sm font-medium text-[#2D6A4F]">
-              WTF (What the Fridge) · Shared-fridge meal finder
-            </p>
           </div>
 
-          <h1 className="font-display text-[2.25rem] sm:text-5xl lg:text-[3.1rem] font-bold tracking-tight text-[#1A211D] text-balance leading-[1.08]">
-            Cook what is already in your fridge before break.
+          <h1 className="cartoon-brand-text text-[2.25rem] sm:text-[2.85rem] lg:text-[3.15rem] font-bold tracking-normal leading-[1.12] text-balance">
+            <span className="text-[#F1481B]">WTF</span>{" "}
+            <span className="text-[#143321]">(What the Fridge)</span>{" "}
+            <span className="text-[#2D6A4F]" aria-hidden="true">·</span>{" "}
+            <span className="text-[#2D6A4F]">Shared-fridge meal finder</span>
           </h1>
+
+          <p className="font-display text-xl sm:text-2xl lg:text-[1.7rem] font-bold tracking-tight text-[#1A211D] text-balance leading-[1.2]">
+            Cook what is already in your fridge before break.
+          </p>
 
           <p className="text-base sm:text-lg text-[#4A554E] leading-relaxed max-w-xl">
             Built for students with a shared fridge, one frying pan, and 15 minutes. Answer one question tonight: what can I actually make with the food I already have?
@@ -125,81 +129,76 @@ export function HomeScreen({
             Designed around how shared fridges actually work
           </h2>
           <p className="text-base text-[#4A554E]">
-            Most recipe apps assume a full pantry and an empty grocery list. WTF works strictly from your shelf.
+            No full-pantry assumptions—just meals from food you actually have.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Feature 01 — Wide */}
-          <div className="md:col-span-2 rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-7 flex flex-col justify-between space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-[#2D6A4F]">
-                01. Three ways to start
-              </p>
-              <h3 className="font-display text-xl sm:text-2xl font-bold text-[#1A211D]">
-                Snap a fridge photo, type with quantities, or load a sample shelf
-              </h3>
-              <p className="text-sm sm:text-base text-[#4A554E] leading-relaxed max-w-xl">
-                Upload a quick shelf photo for visual ingredient detection, type items like <span className="font-medium text-[#1A211D]">1 egg</span> or <span className="font-medium text-[#1A211D]">4 eggs</span>, or open the pre-loaded sample fridge in one tap.
-              </p>
-            </div>
-            <p className="text-xs text-[#525E56]">
-              Photo scan · Manual entry · Sample demo without an API key
+          <div className="md:col-span-2 rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-7 space-y-3">
+            <p className="text-xs font-semibold text-[#2D6A4F]">
+              01. Three ways to start
             </p>
+            <h3 className="font-display text-xl sm:text-2xl font-bold text-[#1A211D]">
+              Add what is on your shelf
+            </h3>
+            <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base text-[#4A554E]">
+              <li>Upload a fridge photo to detect visible items</li>
+              <li>
+                Type items with quantities (like{" "}
+                <span className="font-semibold text-[#1A211D]">1 egg</span> or{" "}
+                <span className="font-semibold text-[#1A211D]">4 eggs</span>)
+              </li>
+              <li>Try the sample fridge in one tap—no API key needed</li>
+            </ul>
           </div>
 
           {/* Feature 02 — Narrow */}
-          <div className="rounded-2xl border border-[#B7D1C2] bg-[#EDF5F0] p-6 sm:p-7 flex flex-col justify-between space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-[#1B4332]">
-                02. Shared-fridge filter
-              </p>
-              <h3 className="font-display text-xl font-bold text-[#1A211D]">
-                Leave your roommates’ food out
-              </h3>
-              <p className="text-sm text-[#39453E] leading-relaxed">
-                Review every item as an editable chip, step exact quantities up or down, and remove anything that isn’t yours.
-              </p>
-            </div>
-            <p className="text-xs text-[#1B4332]">
-              Inline rename · Quantity steppers
+          <div className="rounded-2xl border border-[#B7D1C2] bg-[#EDF5F0] p-6 sm:p-7 space-y-3">
+            <p className="text-xs font-semibold text-[#1B4332]">
+              02. Shared-fridge filter
             </p>
+            <h3 className="font-display text-xl font-bold text-[#1A211D]">
+              Keep roommates’ food out
+            </h3>
+            <ul className="list-disc pl-5 space-y-1.5 text-sm text-[#39453E]">
+              <li>Remove anything that isn’t yours</li>
+              <li>Adjust quantities with − / + steppers</li>
+              <li>Edit ingredient names inline</li>
+            </ul>
           </div>
 
           {/* Feature 03 — Narrow */}
-          <div className="rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-7 flex flex-col justify-between space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-[#2D6A4F]">
-                03. Strict pantry rules
-              </p>
-              <h3 className="font-display text-xl font-bold text-[#1A211D]">
-                No shopping mode by default
-              </h3>
-              <p className="text-sm text-[#4A554E] leading-relaxed">
-                Oil, butter, and seasonings only count when you add them—so nothing requires a late-night store run.
-              </p>
-            </div>
-            <p className="text-xs text-[#525E56]">
-              Exact ingredient matching
+          <div className="rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-7 space-y-3">
+            <p className="text-xs font-semibold text-[#2D6A4F]">
+              03. Strict pantry rules
             </p>
+            <h3 className="font-display text-xl font-bold text-[#1A211D]">
+              No shopping mode
+            </h3>
+            <ul className="list-disc pl-5 space-y-1.5 text-sm text-[#4A554E]">
+              <li>Only shows meals you can cook tonight</li>
+              <li>Oil, butter, and spices count only if added</li>
+            </ul>
           </div>
 
           {/* Feature 04 — Wide */}
-          <div className="md:col-span-2 rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-7 flex flex-col justify-between space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-[#2D6A4F]">
-                04. Priority ranking & honest near-matches
-              </p>
-              <h3 className="font-display text-xl sm:text-2xl font-bold text-[#1A211D]">
-                Use up what spoils first—fit your pan and your clock
-              </h3>
-              <p className="text-sm sm:text-base text-[#4A554E] leading-relaxed max-w-xl">
-                Mark wilting spinach as <span className="font-medium text-[#1A211D]">Use first</span> to push recipes using it to the top, sorted by cooking time. When nothing matches, see the exact missing item for the closest meal.
-              </p>
-            </div>
-            <p className="text-xs text-[#525E56]">
-              Use first ranking · 10–30 min limits · Equipment filter
+          <div className="md:col-span-2 rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-7 space-y-3">
+            <p className="text-xs font-semibold text-[#2D6A4F]">
+              04. Priority ranking & near-matches
             </p>
+            <h3 className="font-display text-xl sm:text-2xl font-bold text-[#1A211D]">
+              Cook what spoils first
+            </h3>
+            <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base text-[#4A554E]">
+              <li>
+                Mark items like spinach{" "}
+                <span className="font-semibold text-[#1A211D]">Use first</span>{" "}
+                to rank those meals on top
+              </li>
+              <li>Filter by time limit (10–30 min) and available equipment</li>
+              <li>See the exact missing item if nothing matches yet</li>
+            </ul>
           </div>
         </div>
       </section>

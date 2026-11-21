@@ -2,7 +2,8 @@
 
 @layer base {
   :root {
-    --font-display: "Fredoka", system-ui, -apple-system, sans-serif;
+    --font-display: "Baloo 2", system-ui, -apple-system, sans-serif;
+    --font-cartoon: "DynaPuff", "Baloo 2", cursive, sans-serif;
     --font-sans: "Nunito", system-ui, -apple-system, sans-serif;
   }
 
@@ -15,6 +16,17 @@
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
   }
+}
+
+.font-cartoon {
+  font-family: var(--font-cartoon);
+}
+
+.cartoon-brand-text {
+  font-family: var(--font-cartoon);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 6px #FFF8EB;
+  text-shadow: 0 3px 0 #E2D5BE;
 }
 
 @media (prefers-reduced-motion: reduce) {
