@@ -129,7 +129,7 @@ export function AddIngredientsScreen({
         }),
       });
 
-      const data = (await response.json()) as {
+      const data = (await response.json().catch(() => ({}))) as {
         ingredients?: string[];
         error?: string;
       };
@@ -137,7 +137,7 @@ export function AddIngredientsScreen({
       if (!response.ok) {
         setScanError(
           data.error ||
-            "Photo recognition is unavailable right now. Try typing your ingredients or using the sample fridge."
+            "Photo recognition is unavailable on static hosting. Try typing your ingredients or using the sample fridge."
         );
         return;
       }
