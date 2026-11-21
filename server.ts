@@ -139,19 +139,47 @@ async function startServer() {
     }
   });
 
-  if (process.env.NODE_ENV === "production") {
-    const distPath = path.resolve(__dirname, "dist");
-    app.use(express.static(distPath));
+  const distPath = path.resolve(__dirname, "dist");
+  const distIndexPath = path.join(distPath, "index.html");
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.npm_lifecycle_event === "start";
+
+  const serveDist = () => {
+    if (!fs.existsSync(distIndexPath)) {
+      console.error(
+        "Missing dist/index.html. Run `npm run build` before starting in production."
+      );
+    }
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith(".js") || filePath.endsWith(".mjs")) {
+            res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+          } else if (filePath.endsWith(".css")) {
+            res.setHeader("Content-Type", "text/css; charset=utf-8");
+          }
+        },
+      })
+    );
     app.get("*", (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      res.sendFile(distIndexPath);
     });
+  };
+
+  if (isProduction) {
+    serveDist();
   } else {
-    const { createServer: createViteServer } = await import("vite");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch {
+      serveDist();
+    }
   }
 
   app.listen(PORT, "0.0.0.0", () => {
