@@ -3,6 +3,8 @@ import { ArrowRight, Sparkles, Utensils } from "lucide-react";
 import { RECIPES } from "../data/recipes";
 
 const HERO_IMAGE_URL = "/src/assets/images/kitchen_fridge_prep_1795293379048.jpg";
+const PRODUCT_OVERVIEW_URL = "/assets/aistudio/IMG_4109_e2d79a45.PNG";
+const LOGO_URL = "/assets/aistudio/IMG_4111_9a68c17d.PNG";
 
 interface HomeScreenProps {
   onStartPlanning: () => void;
@@ -14,15 +16,24 @@ export function HomeScreen({
   onTrySampleFridge,
 }: HomeScreenProps) {
   const [heroImgFailed, setHeroImgFailed] = useState(false);
+  const [overviewImgFailed, setOverviewImgFailed] = useState(false);
 
   return (
     <div className="space-y-14 sm:space-y-16">
       {/* 1. Hero Proposition */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
         <div className="lg:col-span-7 flex flex-col justify-center space-y-5">
-          <p className="text-sm font-medium text-[#2D6A4F]">
-            WTF (What the Fridge) · Shared-fridge meal finder
-          </p>
+          <div className="flex items-center gap-3">
+            <img
+              src={LOGO_URL}
+              alt="What The Fridge mascot logo"
+              referrerPolicy="no-referrer"
+              className="h-12 w-auto object-contain shrink-0 sm:hidden"
+            />
+            <p className="text-sm font-medium text-[#2D6A4F]">
+              WTF (What the Fridge) · Shared-fridge meal finder
+            </p>
+          </div>
 
           <h1 className="font-display text-[2.25rem] sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[#1A211D] text-balance leading-[1.08]">
             Cook what is already in your fridge before break.
@@ -83,7 +94,31 @@ export function HomeScreen({
         </div>
       </section>
 
-      {/* 2. Asymmetric Bento Feature Showcase */}
+      {/* 2. Illustrated Product Introduction */}
+      {!overviewImgFailed && (
+        <section className="space-y-4">
+          <div className="max-w-2xl space-y-1.5">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#1A211D]">
+              How What The Fridge works
+            </h2>
+            <p className="text-base text-[#4A554E]">
+              Snap or type what is on your shelf, adjust quantities, pick your pan and time, and cook tonight.
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-[#E2DDD2] bg-[#FAF7F0] p-2 sm:p-4">
+            <img
+              src={PRODUCT_OVERVIEW_URL}
+              alt="What The Fridge workflow showing Upload Your Fridge, Set Quantities, Choose Cooking Setup, and Recipe Suggestions"
+              referrerPolicy="no-referrer"
+              onError={() => setOverviewImgFailed(true)}
+              className="w-full h-auto rounded-xl object-contain"
+            />
+          </div>
+        </section>
+      )}
+
+      {/* 3. Asymmetric Bento Feature Showcase */}
       <section className="space-y-6">
         <div className="max-w-2xl space-y-2">
           <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#1A211D] text-balance">
@@ -169,7 +204,7 @@ export function HomeScreen({
         </div>
       </section>
 
-      {/* 3. Meal Preview Strip */}
+      {/* 4. Meal Preview Strip */}
       <section className="space-y-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="space-y-1">
@@ -214,7 +249,7 @@ export function HomeScreen({
         </div>
       </section>
 
-      {/* 4. Final Callout */}
+      {/* 5. Final Callout */}
       <section className="rounded-2xl border border-[#B7D1C2] bg-[#EDF5F0] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
         <div className="space-y-1.5 max-w-xl">
           <h2 className="font-display text-2xl font-bold text-[#1A211D]">

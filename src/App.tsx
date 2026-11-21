@@ -187,13 +187,20 @@ export default function App() {
         {/* Compact 3-zone top bar */}
         <header className="sticky top-0 z-30 border-b border-[#E2DDD2] bg-[#FAF7F0]/95 backdrop-blur-sm">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-8">
-            {/* Zone 1: Single wordmark */}
+            {/* Zone 1: Logo + Wordmark */}
             <button
               type="button"
               onClick={() => setScreen("home")}
-              className="font-display text-sm sm:text-lg font-bold tracking-tight text-[#1B4332] whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-2 font-display text-sm sm:text-lg font-bold tracking-tight text-[#1B4332] whitespace-nowrap shrink-0 cursor-pointer"
             >
-              WTF (What the Fridge)
+              <img
+                src="/assets/aistudio/IMG_4111_9a68c17d.PNG"
+                alt="What The Fridge logo"
+                referrerPolicy="no-referrer"
+                className="h-9 w-auto object-contain shrink-0"
+              />
+              <span className="sm:hidden">WTF</span>
+              <span className="hidden sm:inline">WTF (What the Fridge)</span>
             </button>
 
             {/* Zone 2: Concise single-line nav links */}
