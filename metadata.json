@@ -1,0 +1,6 @@
+{
+  "name": "FridgeFirst",
+  "description": "What can I cook tonight with food I already have? A practical kitchen tool for using up shared fridge ingredients before leaving campus.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
