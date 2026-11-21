@@ -50,8 +50,8 @@ export const RECIPES: Recipe[] = [
     timeMinutes: 8,
     equipment: "frying-pan",
     equipmentLabel: "One frying pan",
-    imageUrl: "/src/assets/images/spinach_egg_scramble_1795291638937.jpg",
-    imageAlt: "Spinach and egg scramble served on a speckled ceramic plate",
+    imageUrl: "/src/assets/images/cartoon_spinach_scramble_1795299497290.jpg",
+    imageAlt: "Cartoon illustration of fluffy scrambled eggs and spinach on a cream plate",
     steps: [
       "Warm a splash of oil in your frying pan over medium heat.",
       "Toss in the spinach and stir for 1 to 2 minutes until wilted.",
@@ -72,8 +72,8 @@ export const RECIPES: Recipe[] = [
     timeMinutes: 12,
     equipment: "frying-pan",
     equipmentLabel: "One frying pan",
-    imageUrl: "/src/assets/images/spinach_egg_wrap_1795291638118.jpg",
-    imageAlt: "Toasted tortilla wrap sliced in half showing scrambled eggs and spinach",
+    imageUrl: "/src/assets/images/cartoon_spinach_wrap_1795299496395.jpg",
+    imageAlt: "Cartoon illustration of a toasted tortilla wrap filled with scrambled eggs and spinach",
     steps: [
       "Warm the oil in your frying pan over medium heat and wilt the spinach.",
       "Pour in beaten eggs and cook until softly scrambled, then slide onto a plate.",
@@ -99,8 +99,8 @@ export const RECIPES: Recipe[] = [
     timeMinutes: 12,
     equipment: "frying-pan",
     equipmentLabel: "One frying pan",
-    imageUrl: "/src/assets/images/spinach_white_beans_1795291637798.jpg",
-    imageAlt: "Sautéed spinach and white beans with toasted garlic slices in a frying pan",
+    imageUrl: "/src/assets/images/cartoon_white_beans_1795299495112.jpg",
+    imageAlt: "Cartoon illustration of white beans, spinach, and garlic simmering in a skillet",
     steps: [
       "Warm oil in your frying pan over medium heat and sizzle sliced or minced garlic for 30 seconds.",
       "Stir in drained canned white beans and cook for 4 minutes until warmed through and lightly crisp.",
@@ -120,8 +120,8 @@ export const RECIPES: Recipe[] = [
     equipment: "frying-pan",
     equipmentLabel: "One frying pan",
     panNote: "Toasted in a dry pan",
-    imageUrl: "/src/assets/images/cheese_quesadilla_1795291637818.jpg",
-    imageAlt: "Golden toasted cheese quesadilla wedges with melted cheese on a plate",
+    imageUrl: "/src/assets/images/cartoon_quesadilla_1795299496558.jpg",
+    imageAlt: "Cartoon illustration of golden toasted cheese quesadilla wedges on a plate",
     steps: [
       "Heat a dry frying pan over medium-low heat—no oil needed.",
       "Place the tortilla flat, sprinkle cheese over one half, and fold the tortilla over.",

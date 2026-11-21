@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowRight, Sparkles, Utensils } from "lucide-react";
 import { RECIPES } from "../data/recipes";
 
-const HERO_IMAGE_URL = "/src/assets/images/kitchen_fridge_prep_1795293379048.jpg";
+const HERO_IMAGE_URL = "/src/assets/images/cartoon_kitchen_prep_1795299496886.jpg";
 const PRODUCT_OVERVIEW_URL = "/assets/aistudio/IMG_4109_e2d79a45.PNG";
 const LOGO_URL = "/assets/aistudio/IMG_4111_9a68c17d.PNG";
 
