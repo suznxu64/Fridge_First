@@ -1,12 +1,35 @@
 import React, { useState } from "react";
-import { Check, Pencil, Plus, Star, Utensils, Clock, X, ArrowLeft } from "lucide-react";
-import type { EquipmentId, IngredientItem, IngredientSource } from "../types";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Clock,
+  Minus,
+  Pencil,
+  Plus,
+  Star,
+  Utensils,
+  X,
+} from "lucide-react";
+import type {
+  EquipmentId,
+  IngredientItem,
+  IngredientSource,
+  ParsedIngredientEntry,
+} from "../types";
 import {
   EQUIPMENT_OPTIONS,
   QUICK_PANTRY_ITEMS,
   TIME_LIMIT_OPTIONS,
 } from "../data/recipes";
-import { cleanIngredientDisplay, normalizeIngredient, parseIngredientInput } from "../utils/recipeMatcher";
+import {
+  cleanIngredientDisplay,
+  formatIngredientWithQuantity,
+  normalizeIngredient,
+  parseIngredientEntry,
+  parseIngredientInput,
+  stepQuantityString,
+} from "../utils/recipeMatcher";
 
 interface ConfirmIngredientsScreenProps {
   ingredients: IngredientItem[];
@@ -14,8 +37,10 @@ interface ConfirmIngredientsScreenProps {
   timeLimit: number;
   equipment: EquipmentId[];
   source: IngredientSource | null;
-  onAddIngredients: (names: string[]) => void;
+  matchCount: number;
+  onAddIngredients: (entries: ParsedIngredientEntry[]) => void;
   onUpdateIngredient: (id: string, newName: string) => void;
+  onUpdateIngredientQuantity: (id: string, newQuantity: string) => void;
   onRemoveIngredient: (id: string) => void;
   onTogglePriority: (id: string) => void;
   onChangeTimeLimit: (minutes: number) => void;
@@ -30,8 +55,10 @@ export function ConfirmIngredientsScreen({
   timeLimit,
   equipment,
   source,
+  matchCount,
   onAddIngredients,
   onUpdateIngredient,
+  onUpdateIngredientQuantity,
   onRemoveIngredient,
   onTogglePriority,
   onChangeTimeLimit,
@@ -39,6 +66,7 @@ export function ConfirmIngredientsScreen({
   onFindMeals,
   onBackToStart,
 }: ConfirmIngredientsScreenProps) {
+  const [newQuantityText, setNewQuantityText] = useState("");
   const [newIngredientText, setNewIngredientText] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
@@ -49,9 +77,27 @@ export function ConfirmIngredientsScreen({
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = parseIngredientInput(newIngredientText);
-    if (parsed.length === 0) return;
-    onAddIngredients(parsed);
+    const qtyInput = newQuantityText.trim();
+
+    if (qtyInput && !newIngredientText.includes(",")) {
+      const parsed = parseIngredientEntry(`${qtyInput} ${newIngredientText}`);
+      if (parsed) {
+        onAddIngredients([parsed]);
+        setNewQuantityText("");
+        setNewIngredientText("");
+        return;
+      }
+    }
+
+    const parsedList = parseIngredientInput(newIngredientText);
+    if (parsedList.length === 0) return;
+
+    if (qtyInput && parsedList.length === 1 && !parsedList[0].quantity) {
+      parsedList[0].quantity = qtyInput;
+    }
+
+    onAddIngredients(parsedList);
+    setNewQuantityText("");
     setNewIngredientText("");
   };
 
@@ -72,7 +118,7 @@ export function ConfirmIngredientsScreen({
 
   const sourceNotice =
     source === "sample"
-      ? "Sample fridge data loaded · Spinach, eggs, and cheese"
+      ? "Sample fridge data · Spinach, eggs, and cheese"
       : source === "photo"
         ? "Detected from your fridge photo"
         : null;
@@ -119,13 +165,13 @@ export function ConfirmIngredientsScreen({
               </span>
             </h2>
             <p className="text-xs text-[#525E56]">
-              Tap <span className="font-semibold text-[#1B4332]">Use first</span> to prioritize what needs to go tonight.
+              Adjust quantities or tap <span className="font-semibold text-[#1B4332]">Use first</span> to prioritize.
             </p>
           </div>
 
           {ingredients.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[#CBD3CA] bg-[#FAF7F0] p-5 text-sm text-[#4A554E]">
-              No ingredients in your list yet. Add ingredients below—such as spinach, oil, or a tortilla.
+              No ingredients in your list yet. Add ingredients below—such as 1 egg, spinach, oil, or 1 tortilla.
             </div>
           ) : (
             <ul className="space-y-2.5" aria-label="Confirmed ingredients">
@@ -136,49 +182,89 @@ export function ConfirmIngredientsScreen({
                 return (
                   <li
                     key={item.id}
-                    className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border p-2.5 sm:px-3.5 transition-colors ${
+                    className={`flex flex-wrap items-center justify-between gap-2.5 rounded-xl border p-2.5 sm:px-3.5 transition-colors ${
                       isPriority
                         ? "border-[#2D6A4F] bg-[#EDF5F0]"
-                        : "border-[#E2DDD2] bg-[#FAF7F0]/70"
+                        : "border-[#E2DDD2] bg-[#FAF7F0]/75 hover:border-[#C9C2B3]"
                     }`}
                   >
-                    {isEditing ? (
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          commitEditing();
-                        }}
-                        className="flex flex-1 items-center gap-2 min-w-[180px]"
-                      >
+                    <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                      {/* Quantity stepper & editable quantity field */}
+                      <div className="inline-flex items-center rounded-xl border border-[#D5CFC2] bg-white divide-x divide-[#ECE7DC] shrink-0">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateIngredientQuantity(
+                              item.id,
+                              stepQuantityString(item.quantity, -1)
+                            )
+                          }
+                          aria-label={`Decrease quantity for ${item.name}`}
+                          className="min-h-[40px] min-w-[36px] inline-flex items-center justify-center text-[#4A554E] hover:text-[#1A211D] hover:bg-[#FAF7F0] rounded-l-xl transition-colors cursor-pointer"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
                         <input
                           type="text"
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
-                          onBlur={commitEditing}
-                          autoFocus
-                          aria-label={`Edit ${item.name}`}
-                          className="flex-1 min-h-[40px] rounded-lg border border-[#2D6A4F] bg-white px-3 text-sm font-medium text-[#1A211D] focus:outline-none"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            onUpdateIngredientQuantity(item.id, e.target.value)
+                          }
+                          placeholder="qty"
+                          aria-label={`Quantity for ${item.name}`}
+                          className="w-16 min-h-[40px] bg-transparent px-1 text-center text-xs font-semibold tabular-nums text-[#1A211D] placeholder:text-[#8A948D] focus:outline-none"
                         />
                         <button
-                          type="submit"
-                          className="min-h-[40px] px-3 rounded-lg bg-[#2D6A4F] text-xs font-semibold text-white whitespace-nowrap cursor-pointer"
+                          type="button"
+                          onClick={() =>
+                            onUpdateIngredientQuantity(
+                              item.id,
+                              stepQuantityString(item.quantity, 1)
+                            )
+                          }
+                          aria-label={`Increase quantity for ${item.name}`}
+                          className="min-h-[40px] min-w-[36px] inline-flex items-center justify-center text-[#4A554E] hover:text-[#1A211D] hover:bg-[#FAF7F0] rounded-r-xl transition-colors cursor-pointer"
                         >
-                          Save
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
-                      </form>
-                    ) : (
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                      </div>
+
+                      {isEditing ? (
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            commitEditing();
+                          }}
+                          className="flex flex-1 items-center gap-2 min-w-[140px]"
+                        >
+                          <input
+                            type="text"
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            onBlur={commitEditing}
+                            autoFocus
+                            aria-label={`Edit ${item.name}`}
+                            className="flex-1 min-h-[40px] rounded-lg border border-[#2D6A4F] bg-white px-3 text-sm font-medium text-[#1A211D] focus:outline-none"
+                          />
+                          <button
+                            type="submit"
+                            className="min-h-[40px] px-3 rounded-lg bg-[#2D6A4F] text-xs font-semibold text-white whitespace-nowrap cursor-pointer"
+                          >
+                            Save
+                          </button>
+                        </form>
+                      ) : (
                         <button
                           type="button"
                           onClick={() => startEditing(item)}
                           title="Tap to rename ingredient"
-                          className="min-h-[44px] inline-flex items-center gap-2 px-2 text-left text-base font-medium text-[#1A211D] hover:text-[#2D6A4F] rounded-lg cursor-pointer"
+                          className="min-h-[44px] inline-flex items-center gap-1.5 px-1.5 text-left text-base font-medium text-[#1A211D] hover:text-[#2D6A4F] rounded-lg cursor-pointer min-w-0"
                         >
                           <span className="truncate">{item.name}</span>
                           <Pencil className="w-3.5 h-3.5 text-[#6B776F] shrink-0" />
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
@@ -200,7 +286,7 @@ export function ConfirmIngredientsScreen({
                       <button
                         type="button"
                         onClick={() => onRemoveIngredient(item.id)}
-                        aria-label={`Remove ${item.name}`}
+                        aria-label={`Remove ${formatIngredientWithQuantity(item)}`}
                         className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-transparent text-[#525E56] hover:border-[#E2DDD2] hover:bg-white hover:text-[#B42318] transition-colors cursor-pointer"
                       >
                         <X className="w-4 h-4" />
@@ -212,8 +298,8 @@ export function ConfirmIngredientsScreen({
             </ul>
           )}
 
-          {/* Add ingredient field */}
-          <div className="pt-3 border-t border-[#ECE7DC] space-y-3">
+          {/* Add ingredient field with optional Qty */}
+          <div className="pt-4 border-t border-[#ECE7DC] space-y-3">
             <form onSubmit={handleAddSubmit} className="space-y-2">
               <label
                 htmlFor="add-ingredient-input"
@@ -222,14 +308,27 @@ export function ConfirmIngredientsScreen({
                 Add ingredient
               </label>
               <div className="flex flex-col sm:flex-row gap-2.5">
-                <input
-                  id="add-ingredient-input"
-                  type="text"
-                  value={newIngredientText}
-                  onChange={(e) => setNewIngredientText(e.target.value)}
-                  placeholder="e.g. oil, tortilla, garlic, canned white beans"
-                  className="flex-1 min-h-[48px] rounded-xl border border-[#CBD3CA] bg-[#FAF7F0] px-4 py-2.5 text-base text-[#1A211D] placeholder:text-[#6B776F] focus:border-[#2D6A4F] focus:bg-white focus:outline-none"
-                />
+                <div className="flex flex-1 gap-2">
+                  <label htmlFor="add-quantity-input" className="sr-only">
+                    Quantity
+                  </label>
+                  <input
+                    id="add-quantity-input"
+                    type="text"
+                    value={newQuantityText}
+                    onChange={(e) => setNewQuantityText(e.target.value)}
+                    placeholder="Qty (e.g. 4)"
+                    className="w-24 sm:w-28 min-h-[48px] rounded-xl border border-[#CBD3CA] bg-[#FAF7F0] px-3 py-2.5 text-sm text-[#1A211D] placeholder:text-[#6B776F] focus:border-[#2D6A4F] focus:bg-white focus:outline-none shrink-0"
+                  />
+                  <input
+                    id="add-ingredient-input"
+                    type="text"
+                    value={newIngredientText}
+                    onChange={(e) => setNewIngredientText(e.target.value)}
+                    placeholder="egg, tortilla, oil, canned white beans..."
+                    className="flex-1 min-w-0 min-h-[48px] rounded-xl border border-[#CBD3CA] bg-[#FAF7F0] px-4 py-2.5 text-base text-[#1A211D] placeholder:text-[#6B776F] focus:border-[#2D6A4F] focus:bg-white focus:outline-none"
+                  />
+                </div>
                 <button
                   type="submit"
                   className="min-h-[48px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#2D6A4F] bg-white px-5 py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#EDF5F0] whitespace-nowrap cursor-pointer"
@@ -238,6 +337,10 @@ export function ConfirmIngredientsScreen({
                   Add
                 </button>
               </div>
+              <p className="text-xs text-[#525E56]">
+                Tip: Type <span className="font-medium text-[#1A211D]">1 egg</span> or{" "}
+                <span className="font-medium text-[#1A211D]">4 eggs</span> directly, or fill in Qty separately.
+              </p>
             </form>
 
             {/* Quick-tap pantry staples */}
@@ -247,10 +350,11 @@ export function ConfirmIngredientsScreen({
               </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_PANTRY_ITEMS.map((item) => {
-                  const alreadyAdded = normalizedSet.has(normalizeIngredient(item));
+                  const alreadyAdded = normalizedSet.has(normalizeIngredient(item.name));
+                  const label = formatIngredientWithQuantity(item);
                   return (
                     <button
-                      key={item}
+                      key={item.name}
                       type="button"
                       disabled={alreadyAdded}
                       onClick={() => onAddIngredients([item])}
@@ -265,7 +369,7 @@ export function ConfirmIngredientsScreen({
                       ) : (
                         <Plus className="w-3.5 h-3.5" />
                       )}
-                      {item}
+                      {label}
                     </button>
                   );
                 })}
@@ -356,14 +460,20 @@ export function ConfirmIngredientsScreen({
               </div>
             </div>
 
-            {/* Primary CTA */}
-            <div className="pt-2">
+            {/* Primary CTA with subtle live readiness cue */}
+            <div className="pt-2 space-y-2">
+              <p className="text-xs font-medium text-[#525E56] text-center tabular-nums">
+                {matchCount > 0
+                  ? `${matchCount} ${matchCount === 1 ? "meal" : "meals"} ready with your current list`
+                  : "Tap Find meals to see what is missing"}
+              </p>
               <button
                 type="button"
                 onClick={onFindMeals}
-                className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#2D6A4F] px-6 py-3.5 text-base font-semibold text-white hover:bg-[#1B4332] active:scale-[0.99] transition-colors whitespace-nowrap cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
+                className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#2D6A4F] px-6 py-3.5 text-base font-semibold text-white hover:bg-[#1B4332] active:scale-[0.99] transition-all whitespace-nowrap cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4332]"
               >
                 Find meals
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

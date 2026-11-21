@@ -90,7 +90,7 @@ async function startServer() {
             {
               text: [
                 "Identify only the clearly visible food ingredients in this fridge or kitchen photo.",
-                "Return short, plain ingredient names in lowercase (for example: 'spinach', 'eggs', 'cheese', 'milk', 'tortilla').",
+                "Return short, plain ingredient names in lowercase, including a simple count or container when clearly visible (for example: '1 bag spinach', '4 eggs', '1 block cheese', 'milk', '2 tortillas').",
                 "Do not guess hidden items, brand names, or pantry staples that you cannot see.",
                 "If no food ingredients are clearly visible, return an empty ingredients array.",
               ].join(" "),
@@ -155,11 +155,11 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`FridgeFirst running on http://localhost:${PORT}`);
+    console.log(`WTF (What the Fridge) running on http://localhost:${PORT}`);
   });
 }
 
 startServer().catch((err) => {
-  console.error("Failed to start FridgeFirst server:", err);
+  console.error("Failed to start WTF (What the Fridge) server:", err);
   process.exit(1);
 });

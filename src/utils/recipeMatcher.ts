@@ -3,6 +3,7 @@ import type {
   IngredientItem,
   MatchedRecipe,
   NoMatchExplanation,
+  ParsedIngredientEntry,
   Recipe,
 } from "../types";
 
@@ -76,9 +77,69 @@ const KEEP_TRAILING_S = new Set([
   "chickpeas",
 ]);
 
+const QUANTITY_UNITS = new Set([
+  "cup",
+  "cups",
+  "tbsp",
+  "tablespoon",
+  "tablespoons",
+  "tsp",
+  "teaspoon",
+  "teaspoons",
+  "oz",
+  "ounce",
+  "ounces",
+  "lb",
+  "lbs",
+  "pound",
+  "pounds",
+  "g",
+  "gram",
+  "grams",
+  "kg",
+  "ml",
+  "l",
+  "can",
+  "cans",
+  "bag",
+  "bags",
+  "bunch",
+  "bunches",
+  "handful",
+  "handfuls",
+  "clove",
+  "cloves",
+  "slice",
+  "slices",
+  "block",
+  "blocks",
+  "pinch",
+  "pinches",
+  "splash",
+  "jar",
+  "jars",
+  "box",
+  "boxes",
+  "pack",
+  "packs",
+]);
+
+const COUNTABLE_SINGULAR_TO_PLURAL: Record<string, string> = {
+  egg: "eggs",
+  tortilla: "tortillas",
+  wrap: "wraps",
+  clove: "cloves",
+};
+
+const COUNTABLE_PLURAL_TO_SINGULAR: Record<string, string> = {
+  eggs: "egg",
+  tortillas: "tortilla",
+  wraps: "wrap",
+  cloves: "clove",
+};
+
 /**
- * Clean up user-entered display text while preserving readability
- * (for example, stripping leading "a " or "an " from "a tortilla").
+ * Clean up user-entered display text while preserving readability.
  */
 export function cleanIngredientDisplay(raw: string): string {
   return raw
@@ -89,17 +150,141 @@ export function cleanIngredientDisplay(raw: string): string {
 }
 
 /**
+ * Parse a single string like "4 eggs", "1 egg", "2 tbsp olive oil", or "a tortilla"
+ * into a clean { name, quantity } pair.
+ */
+export function parseIngredientEntry(raw: string): ParsedIngredientEntry | null {
+  const trimmed = raw.trim().replace(/\s+/g, " ");
+  if (!trimmed) return null;
+
+  // Handle "a tortilla" / "an egg" -> quantity "1", name "tortilla" / "egg"
+  const articleMatch = trimmed.match(/^(?:a|an)\s+(.+)$/i);
+  if (articleMatch) {
+    const name = cleanIngredientDisplay(articleMatch[1]);
+    return name ? { name, quantity: "1" } : null;
+  }
+
+  // Handle leading numeric quantity (e.g. "4 eggs", "1/2 cup cheese", "2 tbsp oil")
+  const qtyMatch = trimmed.match(
+    /^(\d+(?:\.\d+)?(?:\s*\/\s*\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?)\s+(.+)$/
+  );
+  if (qtyMatch) {
+    const numPart = qtyMatch[1].replace(/\s+/g, "");
+    const restTokens = qtyMatch[2].trim().split(/\s+/);
+
+    if (restTokens.length >= 2 && QUANTITY_UNITS.has(restTokens[0].toLowerCase())) {
+      const unit = restTokens[0].toLowerCase();
+      // Special case: "1 can white beans" -> quantity "1 can", name "canned white beans"
+      if (unit === "can" || unit === "cans") {
+        const restName = cleanIngredientDisplay(restTokens.slice(1).join(" "));
+        if (restName === "white beans" || restName === "white bean") {
+          return { name: "canned white beans", quantity: `${numPart} ${unit}` };
+        }
+      }
+      // Special case: "2 cloves garlic" -> quantity "2 cloves", name "garlic"
+      const remainingName = cleanIngredientDisplay(restTokens.slice(1).join(" "));
+      if (remainingName) {
+        return {
+          name: remainingName,
+          quantity: `${numPart} ${unit}`,
+        };
+      }
+    }
+
+    const name = cleanIngredientDisplay(qtyMatch[2]);
+    if (name) {
+      return {
+        name: adjustCountableNoun(name, numPart),
+        quantity: numPart,
+      };
+    }
+  }
+
+  const plainName = cleanIngredientDisplay(trimmed);
+  return plainName ? { name: plainName, quantity: "" } : null;
+}
+
+/**
+ * Adjust countable ingredient nouns like egg/eggs or tortilla/tortillas
+ * when the quantity is a simple number ("1" -> "egg", "4" -> "eggs").
+ */
+export function adjustCountableNoun(name: string, quantity: string): string {
+  const numeric = parsePureNumber(quantity);
+  if (numeric === null) return name;
+
+  const lower = name.toLowerCase();
+  if (numeric === 1 && COUNTABLE_PLURAL_TO_SINGULAR[lower]) {
+    return COUNTABLE_PLURAL_TO_SINGULAR[lower];
+  }
+  if (numeric !== 1 && COUNTABLE_SINGULAR_TO_PLURAL[lower]) {
+    return COUNTABLE_SINGULAR_TO_PLURAL[lower];
+  }
+  return name;
+}
+
+/**
+ * Format an IngredientItem for display (e.g. "4 eggs", "1 egg", or "spinach").
+ */
+export function formatIngredientWithQuantity(item: {
+  name: string;
+  quantity?: string;
+}): string {
+  const qty = item.quantity?.trim();
+  if (!qty) return item.name;
+  return `${qty} ${adjustCountableNoun(item.name, qty)}`;
+}
+
+/**
+ * Step a quantity string up or down by delta (+1 or -1).
+ * Works cleanly for counts ("1" -> "2") and unit strings ("2 cloves" -> "3 cloves").
+ */
+export function stepQuantityString(currentQuantity: string, delta: 1 | -1): string {
+  const trimmed = currentQuantity.trim();
+  if (!trimmed) {
+    return delta > 0 ? "1" : "";
+  }
+
+  const match = trimmed.match(/^(\d+(?:\.\d+)?)(.*)$/);
+  if (!match) {
+    return trimmed;
+  }
+
+  const value = Number(match[1]);
+  const suffix = match[2];
+  const nextValue = Math.max(0, Math.round((value + delta) * 10) / 10);
+  if (nextValue === 0 && !suffix) {
+    return "0";
+  }
+  return `${nextValue}${suffix}`;
+}
+
+/**
+ * Parse a pure number like "1" or "4" or "0" from a quantity string (or null if text/blank).
+ */
+export function parsePureNumber(quantity: string): number | null {
+  const trimmed = quantity.trim();
+  if (!trimmed) return null;
+  if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    return Number(trimmed);
+  }
+  // Also extract leading number from "1 can", "2 cloves"
+  const leading = trimmed.match(/^(\d+(?:\.\d+)?)\s+\w+$/);
+  return leading ? Number(leading[1]) : null;
+}
+
+/**
  * Normalize an ingredient string to a canonical matching key.
  */
 export function normalizeIngredient(raw: string): string {
-  const cleaned = cleanIngredientDisplay(raw);
+  // Strip any leading quantity before normalizing the ingredient name
+  const parsed = parseIngredientEntry(raw);
+  const cleaned = parsed ? parsed.name : cleanIngredientDisplay(raw);
   if (!cleaned) return "";
 
   if (INGREDIENT_ALIASES[cleaned]) {
     return INGREDIENT_ALIASES[cleaned];
   }
 
-  // Handle simple plural forms like "tomatoes" or "tortillas"
   if (!KEEP_TRAILING_S.has(cleaned)) {
     if (cleaned.endsWith("ies") && cleaned.length > 4) {
       const singular = cleaned.slice(0, -3) + "y";
@@ -119,19 +304,19 @@ export function normalizeIngredient(raw: string): string {
 }
 
 /**
- * Split comma- or newline-separated ingredient input into clean, unique names.
+ * Split comma- or newline-separated ingredient input into clean, unique { name, quantity } entries.
  */
-export function parseIngredientInput(raw: string): string[] {
+export function parseIngredientInput(raw: string): ParsedIngredientEntry[] {
   const parts = raw
     .split(/[\n,]+/)
-    .map((part) => cleanIngredientDisplay(part))
-    .filter(Boolean);
+    .map((part) => parseIngredientEntry(part))
+    .filter((entry): entry is ParsedIngredientEntry => entry !== null);
 
   const seenNormalized = new Set<string>();
-  const result: string[] = [];
+  const result: ParsedIngredientEntry[] = [];
 
   for (const part of parts) {
-    const norm = normalizeIngredient(part);
+    const norm = normalizeIngredient(part.name);
     if (!norm || seenNormalized.has(norm)) continue;
     seenNormalized.add(norm);
     result.push(part);
@@ -140,10 +325,6 @@ export function parseIngredientInput(raw: string): string[] {
   return result;
 }
 
-/**
- * Format an ingredient cleanly with an article when appropriate
- * for natural sentences like "except a tortilla".
- */
 function formatMissingNoun(ingredient: string): string {
   const countableWithArticle: Record<string, string> = {
     tortilla: "a tortilla",
@@ -152,9 +333,35 @@ function formatMissingNoun(ingredient: string): string {
   return countableWithArticle[ingredient] ?? ingredient;
 }
 
+function hasEnoughIngredient(
+  userItemsByKey: Map<string, IngredientItem>,
+  key: string,
+  minCount = 1
+): boolean {
+  const item = userItemsByKey.get(normalizeIngredient(key));
+  if (!item) return false;
+
+  const numericQty = parsePureNumber(item.quantity);
+  if (numericQty !== null) {
+    return numericQty >= minCount && numericQty > 0;
+  }
+  // If user didn't specify a numeric quantity (or used e.g. "some"), treat as available
+  return true;
+}
+
+function buildUserItemMap(userIngredients: IngredientItem[]): Map<string, IngredientItem> {
+  const map = new Map<string, IngredientItem>();
+  for (const item of userIngredients) {
+    const key = normalizeIngredient(item.name);
+    if (!key) continue;
+    map.set(key, item);
+  }
+  return map;
+}
+
 /**
  * Filter and rank recipes in strict "No shopping" mode:
- * - User must have EVERY required ingredient (including oil/butter/seasonings)
+ * - User must have EVERY required ingredient with sufficient quantity (not 0)
  * - User must have the required equipment
  * - Recipe time must fit within the user's time limit
  * - Recipes using the "Use first" priority ingredient rank first,
@@ -169,10 +376,7 @@ export function matchRecipes(params: {
 }): MatchedRecipe[] {
   const { recipes, userIngredients, priorityIngredientId, timeLimit, equipment } = params;
 
-  const availableSet = new Set(
-    userIngredients.map((item) => normalizeIngredient(item.name)).filter(Boolean)
-  );
-
+  const userItemsByKey = buildUserItemMap(userIngredients);
   const priorityItem = userIngredients.find((item) => item.id === priorityIngredientId);
   const priorityNormalized = priorityItem ? normalizeIngredient(priorityItem.name) : null;
 
@@ -182,8 +386,8 @@ export function matchRecipes(params: {
     if (recipe.timeMinutes > timeLimit) continue;
     if (!equipment.includes(recipe.equipment)) continue;
 
-    const hasAllIngredients = recipe.ingredients.every((req) =>
-      availableSet.has(normalizeIngredient(req))
+    const hasAllIngredients = recipe.ingredientRequirements.every((req) =>
+      hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 1)
     );
     if (!hasAllIngredients) continue;
 
@@ -210,7 +414,7 @@ export function matchRecipes(params: {
 
 /**
  * When zero recipes match, find the closest real recipe in the dataset
- * and explain the exact missing ingredient, time shortfall, or equipment gap.
+ * and explain the exact missing ingredient, quantity gap, time shortfall, or equipment gap.
  */
 export function explainNoMatch(params: {
   recipes: Recipe[];
@@ -221,18 +425,16 @@ export function explainNoMatch(params: {
   const { recipes, userIngredients, timeLimit, equipment } = params;
   if (recipes.length === 0) return null;
 
-  const availableSet = new Set(
-    userIngredients.map((item) => normalizeIngredient(item.name)).filter(Boolean)
-  );
+  const userItemsByKey = buildUserItemMap(userIngredients);
 
   const scored = recipes.map((recipe) => {
-    const missingIngredients = recipe.ingredients.filter(
-      (req) => !availableSet.has(normalizeIngredient(req))
-    );
+    const missingIngredients = recipe.ingredientRequirements
+      .filter((req) => !hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 1))
+      .map((req) => req.key);
+
     const overTime = recipe.timeMinutes > timeLimit;
     const missingEquip = !equipment.includes(recipe.equipment);
 
-    // Lower score = closer to being cookable right now
     const penalty =
       missingIngredients.length * 10 + (overTime ? 4 : 0) + (missingEquip ? 6 : 0);
 

@@ -1,11 +1,17 @@
-import { ArrowLeft, Star } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Star, Utensils } from "lucide-react";
 import type {
   EquipmentId,
   IngredientItem,
   MatchedRecipe,
   NoMatchExplanation,
+  Recipe,
 } from "../types";
 import { EQUIPMENT_OPTIONS } from "../data/recipes";
+import {
+  formatIngredientWithQuantity,
+  normalizeIngredient,
+} from "../utils/recipeMatcher";
 
 interface MealsScreenProps {
   matches: MatchedRecipe[];
@@ -15,6 +21,51 @@ interface MealsScreenProps {
   timeLimit: number;
   equipment: EquipmentId[];
   onEditIngredients: () => void;
+}
+
+function RecipePhoto({
+  recipe,
+  compact = false,
+}: {
+  recipe: Recipe;
+  compact?: boolean;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  if (!recipe.imageUrl || failed) {
+    return (
+      <div
+        className={`${
+          compact ? "w-28 h-24 rounded-xl border" : "aspect-[4/3] w-full border-b"
+        } border-[#E2DDD2] bg-gradient-to-br from-[#EDF5F0] to-[#E5DFD2] flex flex-col items-center justify-center gap-1.5 px-3 text-center shrink-0`}
+      >
+        <Utensils className="w-6 h-6 text-[#2D6A4F]" />
+        {!compact && (
+          <span className="font-display text-sm font-semibold text-[#1B4332]">
+            {recipe.name}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${
+        compact
+          ? "w-28 h-24 rounded-xl border shrink-0"
+          : "aspect-[4/3] w-full border-b"
+      } overflow-hidden bg-[#ECE7DC] border-[#E2DDD2]`}
+    >
+      <img
+        src={recipe.imageUrl}
+        alt={recipe.imageAlt ?? recipe.name}
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+      />
+    </div>
+  );
 }
 
 export function MealsScreen({
@@ -32,6 +83,11 @@ export function MealsScreen({
 
   const equipmentSummary =
     equipmentNames.length > 0 ? equipmentNames.join(", ") : "No equipment selected";
+
+  const userItemsByKey = new Map<string, IngredientItem>();
+  for (const item of ingredients) {
+    userItemsByKey.set(normalizeIngredient(item.name), item);
+  }
 
   return (
     <div className="space-y-6">
@@ -55,7 +111,7 @@ export function MealsScreen({
               <>
                 <span aria-hidden="true">·</span>
                 <span className="font-medium text-[#1B4332]">
-                  Use first: {priorityIngredient.name}
+                  Use first: {formatIngredientWithQuantity(priorityIngredient)}
                 </span>
               </>
             )}
@@ -77,93 +133,118 @@ export function MealsScreen({
           {matches.map(({ recipe, usesPriority }) => (
             <article
               key={recipe.id}
-              className={`flex flex-col justify-between rounded-2xl border p-5 sm:p-6 space-y-4 ${
-                usesPriority
-                  ? "border-[#2D6A4F] bg-white"
-                  : "border-[#E2DDD2] bg-white"
+              className={`group flex flex-col overflow-hidden rounded-2xl border bg-white ${
+                usesPriority ? "border-[#2D6A4F]" : "border-[#E2DDD2]"
               }`}
             >
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  {usesPriority && priorityIngredient && (
-                    <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1B4332]">
-                      <Star className="w-3.5 h-3.5 fill-[#2D6A4F] text-[#2D6A4F]" />
-                      Uses your {priorityIngredient.name}
-                    </p>
-                  )}
+              <RecipePhoto recipe={recipe} />
 
-                  <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1A211D]">
-                    {recipe.name}
-                  </h2>
+              {usesPriority && priorityIngredient && (
+                <div className="flex items-center gap-2 border-b border-[#C6DDD0] bg-[#EDF5F0] px-5 py-2.5 text-xs font-semibold text-[#1B4332]">
+                  <Star className="w-3.5 h-3.5 fill-[#2D6A4F] text-[#2D6A4F] shrink-0" />
+                  <span>Uses your {priorityIngredient.name}</span>
+                </div>
+              )}
 
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-[#525E56]">
-                    <span className="font-medium text-[#1A211D] tabular-nums">
-                      {recipe.timeMinutes} minutes
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span>{recipe.equipmentLabel}</span>
-                    {recipe.panNote && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span>{recipe.panNote}</span>
-                      </>
-                    )}
+              <div className="flex-1 flex flex-col justify-between p-5 sm:p-6 space-y-4">
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1A211D]">
+                      {recipe.name}
+                    </h2>
+
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-[#525E56]">
+                      <span className="font-medium text-[#1A211D] tabular-nums">
+                        {recipe.timeMinutes} minutes
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>{recipe.equipmentLabel}</span>
+                      {recipe.panNote && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span>{recipe.panNote}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Ingredients */}
-                <div className="rounded-xl bg-[#FAF7F0] px-4 py-3 space-y-1">
-                  <h3 className="text-xs font-semibold text-[#525E56]">
-                    Ingredients used
-                  </h3>
-                  <p className="text-sm font-medium text-[#1A211D]">
-                    {recipe.ingredientList.join(", ")}
-                  </p>
-                </div>
+                  {/* Ingredients with recipe amounts + user's on-hand quantity */}
+                  <div className="rounded-xl bg-[#FAF7F0] px-4 py-3.5 space-y-2">
+                    <h3 className="text-xs font-semibold text-[#525E56]">
+                      Ingredients needed
+                    </h3>
+                    <ul className="divide-y divide-[#ECE7DC] text-sm text-[#1A211D]">
+                      {recipe.ingredientRequirements.map((req) => {
+                        const userItem = userItemsByKey.get(normalizeIngredient(req.key));
+                        const userQty = userItem?.quantity?.trim();
+                        return (
+                          <li
+                            key={req.key}
+                            className="flex flex-wrap items-baseline justify-between gap-2 py-1.5 first:pt-0 last:pb-0"
+                          >
+                            <span className="font-medium">{req.label}</span>
+                            {userItem && userQty && (
+                              <span className="text-xs font-medium text-[#2D6A4F] tabular-nums">
+                                you have {formatIngredientWithQuantity(userItem)}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
 
-                {/* Cooking steps */}
-                <div className="space-y-2">
-                  <h3 className="text-xs font-semibold text-[#525E56]">
-                    Cooking steps
-                  </h3>
-                  <ol className="space-y-2 text-sm text-[#2F3A33] leading-relaxed">
-                    {recipe.steps.map((step, index) => (
-                      <li key={index} className="flex gap-2.5">
-                        <span className="font-semibold text-[#2D6A4F] tabular-nums shrink-0">
-                          {index + 1}.
-                        </span>
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ol>
+                  {/* Cooking steps */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-xs font-semibold text-[#525E56]">
+                      Cooking steps
+                    </h3>
+                    <ol className="space-y-2.5 text-sm text-[#2F3A33] leading-relaxed">
+                      {recipe.steps.map((step, index) => (
+                        <li key={index} className="flex items-start gap-2.5">
+                          <span className="w-6 h-6 rounded-full bg-[#EDF5F0] text-[#1B4332] text-xs font-bold tabular-nums flex items-center justify-center shrink-0 mt-0.5">
+                            {index + 1}
+                          </span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
               </div>
             </article>
           ))}
         </div>
       ) : (
-        <section className="rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-8 max-w-2xl space-y-4">
-          <div className="space-y-2">
-            <h2 className="font-display text-xl font-bold text-[#1A211D]">
-              {noMatchExplanation?.headline ??
-                "No recipes matched all of your current ingredients."}
-            </h2>
-            <p className="text-base text-[#4A554E] leading-relaxed">
-              {noMatchExplanation?.detail ??
-                "In No shopping mode, every ingredient in a recipe needs to be in your confirmed list."}
-            </p>
+        <section className="rounded-2xl border border-[#E2DDD2] bg-white p-6 sm:p-8 max-w-2xl space-y-5">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            {noMatchExplanation?.closestRecipe && (
+              <RecipePhoto recipe={noMatchExplanation.closestRecipe} compact />
+            )}
+            <div className="space-y-2">
+              <h2 className="font-display text-xl font-bold text-[#1A211D]">
+                {noMatchExplanation?.headline ??
+                  "No recipes matched all of your current ingredients."}
+              </h2>
+              <p className="text-base text-[#4A554E] leading-relaxed">
+                {noMatchExplanation?.detail ??
+                  "In No shopping mode, every ingredient in a recipe needs to be in your confirmed list."}
+              </p>
+            </div>
           </div>
 
           {ingredients.length > 0 && (
-            <p className="text-sm text-[#525E56]">
+            <p className="text-sm text-[#525E56] rounded-xl bg-[#FAF7F0] px-4 py-3">
               Your current list:{" "}
               <span className="font-medium text-[#1A211D]">
-                {ingredients.map((item) => item.name).join(", ")}
+                {ingredients
+                  .map((item) => formatIngredientWithQuantity(item))
+                  .join(", ")}
               </span>
             </p>
           )}
 
-          <div className="pt-2">
+          <div>
             <button
               type="button"
               onClick={onEditIngredients}
