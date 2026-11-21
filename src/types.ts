@@ -35,7 +35,7 @@ export interface Recipe {
   /** Structured ingredient quantities for quantity-aware matching */
   ingredientRequirements: RecipeIngredientRequirement[];
   timeMinutes: number;
-  equipment: EquipmentId;
+  equipment: EquipmentId | "none";
   equipmentLabel: string;
   panNote?: string;
   imageUrl?: string;

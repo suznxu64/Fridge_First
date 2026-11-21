@@ -21,6 +21,9 @@ export const QUICK_PANTRY_ITEMS: ParsedIngredientEntry[] = [
   { name: "canned white beans", quantity: "1 can" },
   { name: "butter", quantity: "1 tbsp" },
   { name: "salt", quantity: "1 pinch" },
+  { name: "bread", quantity: "2 slices" },
+  { name: "peanut butter", quantity: "2 tbsp" },
+  { name: "jelly", quantity: "1 tbsp" },
 ];
 
 export const TIME_LIMIT_OPTIONS = [10, 15, 20, 30] as const;
@@ -126,6 +129,48 @@ export const RECIPES: Recipe[] = [
       "Heat a dry frying pan over medium-low heat—no oil needed.",
       "Place the tortilla flat, sprinkle cheese over one half, and fold the tortilla over.",
       "Toast 2 to 3 minutes per side until golden brown and the cheese is melted inside.",
+    ],
+  },
+  {
+    id: "pbj-sandwich",
+    name: "PB&J Sandwich",
+    ingredients: ["bread", "peanut butter", "jelly"],
+    ingredientList: ["2 slices bread", "2 tbsp peanut butter", "1–2 tbsp jelly"],
+    ingredientRequirements: [
+      { key: "bread", label: "2 slices bread", minCount: 1 },
+      { key: "peanut butter", label: "2 tbsp peanut butter" },
+      { key: "jelly", label: "1–2 tbsp jelly" },
+    ],
+    timeMinutes: 5,
+    equipment: "none",
+    equipmentLabel: "No heat needed",
+    imageUrl: "/src/assets/images/cartoon_pbj_sandwich_1795302665507.jpg",
+    imageAlt: "Cartoon illustration of a peanut butter and jelly sandwich cut diagonally on a plate",
+    steps: [
+      "Lay 2 slices of bread flat on a plate.",
+      "Spread peanut butter evenly over one slice with a butter knife or spoon.",
+      "Spread jelly over the other slice, press the halves together, and cut in half to serve.",
+    ],
+  },
+  {
+    id: "turkey-sandwich",
+    name: "Turkey Sandwich",
+    ingredients: ["bread", "turkey", "cheese"],
+    ingredientList: ["2 slices bread", "2–3 slices turkey", "1–2 slices cheese"],
+    ingredientRequirements: [
+      { key: "bread", label: "2 slices bread", minCount: 1 },
+      { key: "turkey", label: "2–3 slices turkey", minCount: 1 },
+      { key: "cheese", label: "1–2 slices cheese", minCount: 1 },
+    ],
+    timeMinutes: 5,
+    equipment: "none",
+    equipmentLabel: "No heat needed",
+    imageUrl: "/src/assets/images/cartoon_turkey_sandwich_1795302666207.jpg",
+    imageAlt: "Cartoon illustration of a layered turkey and cheese sandwich cut in half on a plate",
+    steps: [
+      "Lay 2 slices of bread flat on a plate.",
+      "Layer the deli turkey slices evenly over one slice of bread and top with cheese.",
+      "Place the second slice of bread on top, press gently, and cut in half to serve.",
     ],
   },
 ];

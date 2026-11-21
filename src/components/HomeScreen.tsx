@@ -208,10 +208,10 @@ export function HomeScreen({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="space-y-1">
             <h2 className="font-display text-2xl font-bold tracking-tight text-[#1A211D]">
-              One-pan meals ready in minutes
+              Dorm meals ready in minutes
             </h2>
             <p className="text-sm text-[#4A554E]">
-              Every starter recipe needs only a single frying pan and straightforward dorm-kitchen steps.
+              Simple one-pan and no-cook dorm recipes with straightforward steps.
             </p>
           </div>
           <span className="text-xs font-medium text-[#525E56] tabular-nums">
@@ -219,7 +219,7 @@ export function HomeScreen({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {RECIPES.map((recipe) => (
             <div
               key={recipe.id}

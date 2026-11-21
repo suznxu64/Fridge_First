@@ -115,8 +115,13 @@ async function startServer() {
         },
       });
 
-      const rawJson = (response.text ?? "{}").trim();
-      const parsed = JSON.parse(rawJson) as { ingredients?: unknown };
+      const rawText = (response.text ?? "{}").trim();
+      const cleanedJson = rawText
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
+      const parsed = JSON.parse(cleanedJson || "{}") as { ingredients?: unknown };
       const rawList = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
 
       const seen = new Set<string>();
@@ -130,8 +135,28 @@ async function startServer() {
       }
 
       res.json({ ingredients });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Ingredient recognition error:", error);
+      const errObj = error as { status?: number; message?: string };
+      const status = typeof errObj?.status === "number" ? errObj.status : 502;
+      const msg = typeof errObj?.message === "string" ? errObj.message : "";
+
+      if (status === 400 || status === 403 || msg.includes("API_KEY_INVALID") || msg.includes("PERMISSION_DENIED")) {
+        res.status(status === 400 || status === 403 ? status : 403).json({
+          error:
+            "Gemini photo recognition is not authorized with the current API key. Check or select your API key in Settings > Secrets.",
+        });
+        return;
+      }
+
+      if (status === 429 || msg.includes("RESOURCE_EXHAUSTED")) {
+        res.status(429).json({
+          error:
+            "Photo recognition quota is temporarily reached. Try again shortly, or type your ingredients instead.",
+        });
+        return;
+      }
+
       res.status(502).json({
         error:
           "We could not read ingredients from that photo right now. You can type your ingredients or try the sample fridge instead.",

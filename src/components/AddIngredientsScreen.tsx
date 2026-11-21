@@ -119,13 +119,13 @@ export function AddIngredientsScreen({
     setIsScanning(true);
 
     try {
-      const base64 = await readFileAsBase64(file);
+      const { base64, mimeType } = await prepareImageForUpload(file);
       const response = await fetch("/api/recognize-ingredients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageBase64: base64,
-          mimeType: file.type || "image/jpeg",
+          mimeType,
         }),
       });
 
@@ -486,6 +486,53 @@ export function AddIngredientsScreen({
       )}
     </div>
   );
+}
+
+async function prepareImageForUpload(
+  file: File
+): Promise<{ base64: string; mimeType: string }> {
+  try {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error("Image decode failed"));
+        element.src = objectUrl;
+      });
+
+      const maxDim = 1280;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas unavailable");
+
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      const commaIndex = dataUrl.indexOf(",");
+      if (commaIndex >= 0) {
+        return {
+          base64: dataUrl.slice(commaIndex + 1),
+          mimeType: "image/jpeg",
+        };
+      }
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch {
+    // Fallback to raw file bytes if browser cannot render the format on canvas (e.g. HEIC)
+  }
+
+  const rawBase64 = await readFileAsBase64(file);
+  return {
+    base64: rawBase64,
+    mimeType: file.type || "image/jpeg",
+  };
 }
 
 function readFileAsBase64(file: File): Promise<string> {

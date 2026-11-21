@@ -62,6 +62,45 @@ const INGREDIENT_ALIASES: Record<string, string> = {
   "kosher salt": "salt",
   pepper: "pepper",
   "black pepper": "pepper",
+  bread: "bread",
+  "sliced bread": "bread",
+  "white bread": "bread",
+  "wheat bread": "bread",
+  "whole wheat bread": "bread",
+  "sandwich bread": "bread",
+  sourdough: "bread",
+  "sourdough bread": "bread",
+  "bread slice": "bread",
+  "bread slices": "bread",
+  toast: "bread",
+  "peanut butter": "peanut butter",
+  pb: "peanut butter",
+  "creamy peanut butter": "peanut butter",
+  "crunchy peanut butter": "peanut butter",
+  "smooth peanut butter": "peanut butter",
+  jelly: "jelly",
+  jam: "jelly",
+  "grape jelly": "jelly",
+  "strawberry jelly": "jelly",
+  "strawberry jam": "jelly",
+  "raspberry jam": "jelly",
+  "fruit preserves": "jelly",
+  preserves: "jelly",
+  turkey: "turkey",
+  "deli turkey": "turkey",
+  "sliced turkey": "turkey",
+  "turkey breast": "turkey",
+  "turkey slice": "turkey",
+  "turkey slices": "turkey",
+  "smoked turkey": "turkey",
+  "roast turkey": "turkey",
+  "sliced cheese": "cheese",
+  "cheese slice": "cheese",
+  "cheese slices": "cheese",
+  "american cheese": "cheese",
+  "swiss cheese": "cheese",
+  provolone: "cheese",
+  "provolone cheese": "cheese",
 };
 
 const KEEP_TRAILING_S = new Set([
@@ -122,6 +161,8 @@ const QUANTITY_UNITS = new Set([
   "boxes",
   "pack",
   "packs",
+  "loaf",
+  "loaves",
 ]);
 
 const COUNTABLE_SINGULAR_TO_PLURAL: Record<string, string> = {
@@ -129,6 +170,8 @@ const COUNTABLE_SINGULAR_TO_PLURAL: Record<string, string> = {
   tortilla: "tortillas",
   wrap: "wraps",
   clove: "cloves",
+  slice: "slices",
+  loaf: "loaves",
 };
 
 const COUNTABLE_PLURAL_TO_SINGULAR: Record<string, string> = {
@@ -136,6 +179,8 @@ const COUNTABLE_PLURAL_TO_SINGULAR: Record<string, string> = {
   tortillas: "tortilla",
   wraps: "wrap",
   cloves: "clove",
+  slices: "slice",
+  loaves: "loaf",
 };
 
 /**
@@ -384,7 +429,7 @@ export function matchRecipes(params: {
 
   for (const recipe of recipes) {
     if (recipe.timeMinutes > timeLimit) continue;
-    if (!equipment.includes(recipe.equipment)) continue;
+    if (recipe.equipment !== "none" && !equipment.includes(recipe.equipment)) continue;
 
     const hasAllIngredients = recipe.ingredientRequirements.every((req) =>
       hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 1)
@@ -433,7 +478,8 @@ export function explainNoMatch(params: {
       .map((req) => req.key);
 
     const overTime = recipe.timeMinutes > timeLimit;
-    const missingEquip = !equipment.includes(recipe.equipment);
+    const missingEquip =
+      recipe.equipment !== "none" && !equipment.includes(recipe.equipment);
 
     const penalty =
       missingIngredients.length * 10 + (overTime ? 4 : 0) + (missingEquip ? 6 : 0);
