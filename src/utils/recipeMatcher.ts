@@ -23,11 +23,20 @@ const INGREDIENT_ALIASES: Record<string, string> = {
   cheese: "cheese",
   "shredded cheese": "cheese",
   "grated cheese": "cheese",
-  cheddar: "cheese",
-  "cheddar cheese": "cheese",
-  mozzarella: "cheese",
-  "mozzarella cheese": "cheese",
+  "sliced cheese": "cheese",
+  "cheese slice": "cheese",
+  "cheese slices": "cheese",
   "mexican cheese": "cheese",
+  "american cheese": "cheese",
+  "swiss cheese": "cheese",
+  provolone: "cheese",
+  "provolone cheese": "cheese",
+  cheddar: "cheddar",
+  "cheddar cheese": "cheddar",
+  "shredded cheddar": "cheddar",
+  mozzarella: "mozzarella",
+  "mozzarella cheese": "mozzarella",
+  "shredded mozzarella": "mozzarella",
   oil: "oil",
   "olive oil": "oil",
   "cooking oil": "oil",
@@ -40,6 +49,10 @@ const INGREDIENT_ALIASES: Record<string, string> = {
   "flour tortillas": "tortilla",
   "corn tortilla": "tortilla",
   "corn tortillas": "tortilla",
+  "large tortilla": "tortilla",
+  "large tortillas": "tortilla",
+  "small tortilla": "tortilla",
+  "small tortillas": "tortilla",
   wrap: "tortilla",
   wraps: "tortilla",
   "canned white beans": "canned white beans",
@@ -60,8 +73,14 @@ const INGREDIENT_ALIASES: Record<string, string> = {
   salt: "salt",
   "sea salt": "salt",
   "kosher salt": "salt",
-  pepper: "pepper",
-  "black pepper": "pepper",
+  pepper: "black pepper",
+  "black pepper": "black pepper",
+  "ground black pepper": "black pepper",
+  "bell pepper": "bell pepper",
+  "bell peppers": "bell pepper",
+  "red bell pepper": "bell pepper",
+  "green bell pepper": "bell pepper",
+  "yellow bell pepper": "bell pepper",
   bread: "bread",
   "sliced bread": "bread",
   "white bread": "bread",
@@ -72,6 +91,7 @@ const INGREDIENT_ALIASES: Record<string, string> = {
   "sourdough bread": "bread",
   "bread slice": "bread",
   "bread slices": "bread",
+  "thick slice bread": "bread",
   toast: "bread",
   "peanut butter": "peanut butter",
   pb: "peanut butter",
@@ -94,26 +114,181 @@ const INGREDIENT_ALIASES: Record<string, string> = {
   "turkey slices": "turkey",
   "smoked turkey": "turkey",
   "roast turkey": "turkey",
-  "sliced cheese": "cheese",
-  "cheese slice": "cheese",
-  "cheese slices": "cheese",
-  "american cheese": "cheese",
-  "swiss cheese": "cheese",
-  provolone: "cheese",
-  "provolone cheese": "cheese",
+  tomato: "tomato",
+  tomatoes: "tomato",
+  "roma tomato": "tomato",
+  "cherry tomatoes": "tomato",
+  "tomato sauce": "tomato sauce",
+  marinara: "tomato sauce",
+  "marinara sauce": "tomato sauce",
+  "pasta sauce": "tomato sauce",
+  "pizza sauce": "tomato sauce",
+  oats: "oats",
+  "rolled oats": "oats",
+  "quick oats": "oats",
+  "old fashioned oats": "oats",
+  oatmeal: "oats",
+  milk: "milk",
+  "whole milk": "milk",
+  "2% milk": "milk",
+  "skim milk": "milk",
+  "oat milk": "milk",
+  "almond milk": "milk",
+  "soy milk": "milk",
+  banana: "banana",
+  bananas: "banana",
+  "ripe banana": "banana",
+  "ripe bananas": "banana",
+  yogurt: "yogurt",
+  "plain yogurt": "yogurt",
+  "thick plain yogurt": "yogurt",
+  "greek yogurt": "yogurt",
+  "plain greek yogurt": "yogurt",
+  blueberries: "blueberries",
+  blueberry: "blueberries",
+  "fresh blueberries": "blueberries",
+  "frozen blueberries": "blueberries",
+  strawberries: "strawberries",
+  strawberry: "strawberries",
+  "fresh strawberries": "strawberries",
+  "frozen strawberries": "strawberries",
+  apple: "apple",
+  apples: "apple",
+  "red apple": "apple",
+  "green apple": "apple",
+  pear: "pear",
+  pears: "pear",
+  orange: "orange",
+  oranges: "orange",
+  grapes: "grapes",
+  grape: "grapes",
+  "red grapes": "grapes",
+  "green grapes": "grapes",
+  flour: "flour",
+  "all-purpose flour": "flour",
+  "all purpose flour": "flour",
+  "wheat flour": "flour",
+  potato: "potato",
+  potatoes: "potato",
+  "small potato": "potato",
+  "medium potato": "potato",
+  "large potato": "potato",
+  "sweet potato": "sweet potato",
+  "sweet potatoes": "sweet potato",
+  "small sweet potato": "sweet potato",
+  "medium sweet potato": "sweet potato",
+  "large sweet potato": "sweet potato",
+  onion: "onion",
+  onions: "onion",
+  "yellow onion": "onion",
+  "red onion": "onion",
+  "white onion": "onion",
+  peas: "peas",
+  "frozen peas": "peas",
+  "green peas": "peas",
+  avocado: "avocado",
+  avocados: "avocado",
+  "lemon juice": "lemon juice",
+  lemon: "lemon juice",
+  lemons: "lemon juice",
+  "lime juice": "lime juice",
+  lime: "lime juice",
+  limes: "lime juice",
+  tuna: "tuna",
+  "canned tuna": "tuna",
+  cucumber: "cucumber",
+  cucumbers: "cucumber",
+  chickpeas: "chickpeas",
+  "canned chickpeas": "chickpeas",
+  "garbanzo beans": "chickpeas",
+  ham: "ham",
+  "sliced ham": "ham",
+  "deli ham": "ham",
+  "black beans": "black beans",
+  "canned black beans": "black beans",
+  cabbage: "cabbage",
+  "shredded cabbage": "cabbage",
+  "finely shredded cabbage": "cabbage",
+  "green cabbage": "cabbage",
+  "red cabbage": "cabbage",
+  chicken: "chicken",
+  "cooked chicken": "chicken",
+  "chilled cooked chicken": "chicken",
+  "shredded chicken": "chicken",
+  "diced chicken": "chicken",
+  "rotisserie chicken": "chicken",
+  tofu: "tofu",
+  "firm tofu": "tofu",
+  "extra firm tofu": "tofu",
+  "soy sauce": "soy sauce",
+  corn: "corn",
+  "frozen corn": "corn",
+  "canned corn": "corn",
+  "sweet corn": "corn",
+  rice: "rice",
+  "cooked rice": "rice",
+  "chilled cooked rice": "rice",
+  "white rice": "rice",
+  "brown rice": "rice",
+  "leftover rice": "rice",
+  broccoli: "broccoli",
+  "broccoli florets": "broccoli",
+  "small broccoli florets": "broccoli",
+  "chopped broccoli": "broccoli",
+  "finely chopped broccoli": "broccoli",
+  "ground beef": "ground beef",
+  "cooked ground beef": "ground beef",
+  beef: "ground beef",
+  pasta: "pasta",
+  "dry pasta": "pasta",
+  spaghetti: "pasta",
+  "dry spaghetti": "pasta",
+  macaroni: "pasta",
+  "dry macaroni": "pasta",
+  penne: "pasta",
+  "instant ramen": "instant ramen",
+  "block instant ramen": "instant ramen",
+  ramen: "instant ramen",
+  "ramen noodles": "instant ramen",
+  carrot: "carrot",
+  carrots: "carrot",
+  lentils: "lentils",
+  "cooked lentils": "lentils",
+  "dry red lentils": "lentils",
+  "red lentils": "lentils",
+};
+
+/**
+ * Cheese compatibility: generic "cheese" satisfies cheddar/mozzarella recipes,
+ * and specific cheddar/mozzarella also satisfy generic "cheese" recipes.
+ */
+const INGREDIENT_COMPATIBILITY: Record<string, string[]> = {
+  cheese: ["cheese", "cheddar", "mozzarella"],
+  cheddar: ["cheddar", "cheese"],
+  mozzarella: ["mozzarella", "cheese"],
 };
 
 const KEEP_TRAILING_S = new Set([
   "canned white beans",
   "white beans",
+  "black beans",
+  "canned black beans",
   "beans",
-  "greens",
   "oats",
+  "rolled oats",
+  "peas",
+  "frozen peas",
+  "blueberries",
+  "strawberries",
+  "grapes",
+  "chickpeas",
+  "canned chickpeas",
+  "lentils",
+  "cooked lentils",
+  "dry red lentils",
+  "greens",
   "hummus",
   "couscous",
-  "peas",
-  "lentils",
-  "chickpeas",
 ]);
 
 const QUANTITY_UNITS = new Set([
@@ -209,12 +384,20 @@ export function parseIngredientEntry(raw: string): ParsedIngredientEntry | null 
     return name ? { name, quantity: "1" } : null;
   }
 
-  // Handle leading numeric quantity (e.g. "4 eggs", "1/2 cup cheese", "2 tbsp oil")
-  const qtyMatch = trimmed.match(
-    /^(\d+(?:\.\d+)?(?:\s*\/\s*\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?)\s+(.+)$/
+  // Handle leading numeric or Unicode-fraction quantity (e.g. "4 eggs", "½ tomato", "1/2 cup cheese")
+  const normalizedQtyPrefix = trimmed
+    .replace(/(\d)([½¼¾⅓⅔])/g, "$1 $2")
+    .replace(/½/g, "1/2")
+    .replace(/¼/g, "1/4")
+    .replace(/¾/g, "3/4")
+    .replace(/⅓/g, "1/3")
+    .replace(/⅔/g, "2/3");
+
+  const qtyMatch = normalizedQtyPrefix.match(
+    /^(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\s*\/\s*\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?)\s+(.+)$/
   );
   if (qtyMatch) {
-    const numPart = qtyMatch[1].replace(/\s+/g, "");
+    const numPart = qtyMatch[1].replace(/\s*\/\s*/g, "/").replace(/\s+/g, " ");
     const restTokens = qtyMatch[2].trim().split(/\s+/);
 
     if (restTokens.length >= 2 && QUANTITY_UNITS.has(restTokens[0].toLowerCase())) {
@@ -304,11 +487,23 @@ export function stepQuantityString(currentQuantity: string, delta: 1 | -1): stri
 }
 
 /**
- * Parse a pure number like "1" or "4" or "0" from a quantity string (or null if text/blank).
+ * Parse a numeric value like "1", "4", "0", or "1/2" from a quantity string (or null if text/blank).
  */
 export function parsePureNumber(quantity: string): number | null {
-  const trimmed = quantity.trim();
+  const trimmed = quantity
+    .trim()
+    .replace(/½/g, "1/2")
+    .replace(/¼/g, "1/4")
+    .replace(/¾/g, "3/4")
+    .replace(/⅓/g, "1/3")
+    .replace(/⅔/g, "2/3");
   if (!trimmed) return null;
+
+  const fractionMatch = trimmed.match(/^(\d+)\s*\/\s*(\d+)(?:\s+\w+)?$/);
+  if (fractionMatch && Number(fractionMatch[2]) > 0) {
+    return Number(fractionMatch[1]) / Number(fractionMatch[2]);
+  }
+
   if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
     return Number(trimmed);
   }
@@ -381,17 +576,36 @@ function formatMissingNoun(ingredient: string): string {
 function hasEnoughIngredient(
   userItemsByKey: Map<string, IngredientItem>,
   key: string,
-  minCount = 1
+  minCount = 0
 ): boolean {
-  const item = userItemsByKey.get(normalizeIngredient(key));
+  const normalizedKey = normalizeIngredient(key);
+  const candidateKeys = INGREDIENT_COMPATIBILITY[normalizedKey] ?? [normalizedKey];
+
+  let item: IngredientItem | undefined;
+  for (const candidate of candidateKeys) {
+    item = userItemsByKey.get(candidate);
+    if (item) break;
+  }
   if (!item) return false;
 
   const numericQty = parsePureNumber(item.quantity);
   if (numericQty !== null) {
-    return numericQty >= minCount && numericQty > 0;
+    if (numericQty <= 0) return false;
+    return minCount > 0 ? numericQty >= minCount : true;
   }
   // If user didn't specify a numeric quantity (or used e.g. "some"), treat as available
   return true;
+}
+
+function hasRequiredEquipment(
+  recipe: Recipe,
+  selectedEquipment: EquipmentId[]
+): boolean {
+  if (recipe.requiredEquipment && recipe.requiredEquipment.length > 0) {
+    return recipe.requiredEquipment.every((eq) => selectedEquipment.includes(eq));
+  }
+  if (recipe.equipment === "none") return true;
+  return selectedEquipment.includes(recipe.equipment);
 }
 
 function buildUserItemMap(userIngredients: IngredientItem[]): Map<string, IngredientItem> {
@@ -429,16 +643,20 @@ export function matchRecipes(params: {
 
   for (const recipe of recipes) {
     if (recipe.timeMinutes > timeLimit) continue;
-    if (recipe.equipment !== "none" && !equipment.includes(recipe.equipment)) continue;
+    if (!hasRequiredEquipment(recipe, equipment)) continue;
 
     const hasAllIngredients = recipe.ingredientRequirements.every((req) =>
-      hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 1)
+      hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 0)
     );
     if (!hasAllIngredients) continue;
 
     const usesPriority = Boolean(
       priorityNormalized &&
-        recipe.ingredients.some((req) => normalizeIngredient(req) === priorityNormalized)
+        recipe.ingredients.some((req) => {
+          const reqNorm = normalizeIngredient(req);
+          const compat = INGREDIENT_COMPATIBILITY[reqNorm] ?? [reqNorm];
+          return compat.includes(priorityNormalized);
+        })
     );
 
     eligible.push({ recipe, usesPriority });
@@ -474,12 +692,11 @@ export function explainNoMatch(params: {
 
   const scored = recipes.map((recipe) => {
     const missingIngredients = recipe.ingredientRequirements
-      .filter((req) => !hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 1))
+      .filter((req) => !hasEnoughIngredient(userItemsByKey, req.key, req.minCount ?? 0))
       .map((req) => req.key);
 
     const overTime = recipe.timeMinutes > timeLimit;
-    const missingEquip =
-      recipe.equipment !== "none" && !equipment.includes(recipe.equipment);
+    const missingEquip = !hasRequiredEquipment(recipe, equipment);
 
     const penalty =
       missingIngredients.length * 10 + (overTime ? 4 : 0) + (missingEquip ? 6 : 0);

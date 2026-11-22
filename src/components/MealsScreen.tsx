@@ -33,18 +33,17 @@ function RecipePhoto({
   const [failed, setFailed] = useState(false);
 
   if (!recipe.imageUrl || failed) {
+    if (compact) {
+      return (
+        <div className="w-28 h-24 rounded-xl border border-[#E2DDD2] bg-gradient-to-br from-[#EDF5F0] to-[#E5DFD2] flex flex-col items-center justify-center gap-1.5 px-3 text-center shrink-0">
+          <Utensils className="w-6 h-6 text-[#2D6A4F]" />
+        </div>
+      );
+    }
     return (
-      <div
-        className={`${
-          compact ? "w-28 h-24 rounded-xl border" : "aspect-[4/3] w-full border-b"
-        } border-[#E2DDD2] bg-gradient-to-br from-[#EDF5F0] to-[#E5DFD2] flex flex-col items-center justify-center gap-1.5 px-3 text-center shrink-0`}
-      >
-        <Utensils className="w-6 h-6 text-[#2D6A4F]" />
-        {!compact && (
-          <span className="font-display text-sm font-semibold text-[#1B4332]">
-            {recipe.name}
-          </span>
-        )}
+      <div className="w-full border-b border-[#E2DDD2] bg-[#FAF7F0] px-5 py-3 flex items-center gap-2 text-xs font-semibold text-[#2D6A4F]">
+        <Utensils className="w-4 h-4 shrink-0" />
+        <span>{recipe.equipmentLabel}</span>
       </div>
     );
   }

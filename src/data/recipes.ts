@@ -1,4 +1,5 @@
 import type { EquipmentId, ParsedIngredientEntry, Recipe } from "../types";
+import { PANTRY_RECIPES } from "./pantryRecipes";
 
 /**
  * Sample fridge preset so anyone can demo WTF (What the Fridge) immediately
@@ -31,7 +32,9 @@ export const TIME_LIMIT_OPTIONS = [10, 15, 20, 30] as const;
 export const EQUIPMENT_OPTIONS: Array<{ id: EquipmentId; label: string }> = [
   { id: "frying-pan", label: "One frying pan" },
   { id: "microwave", label: "Microwave" },
-  { id: "saucepan", label: "Saucepan" },
+  { id: "saucepan", label: "Pot / Saucepan" },
+  { id: "blender", label: "Blender" },
+  { id: "oven", label: "Oven" },
 ];
 
 /**
@@ -39,7 +42,7 @@ export const EQUIPMENT_OPTIONS: Array<{ id: EquipmentId; label: string }> = [
  * Beginner note: Add new recipes by appending an object with canonical
  * ingredient names, quantities, cooking time in minutes, equipment ID, and short steps.
  */
-export const RECIPES: Recipe[] = [
+const STARTER_RECIPES: Recipe[] = [
   {
     id: "spinach-egg-scramble",
     name: "Spinach and Egg Scramble",
@@ -174,3 +177,5 @@ export const RECIPES: Recipe[] = [
     ],
   },
 ];
+
+export const RECIPES: Recipe[] = [...STARTER_RECIPES, ...PANTRY_RECIPES];

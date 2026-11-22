@@ -1,6 +1,11 @@
 export type ScreenId = "home" | "add" | "confirm" | "meals";
 
-export type EquipmentId = "frying-pan" | "microwave" | "saucepan";
+export type EquipmentId =
+  | "frying-pan"
+  | "microwave"
+  | "saucepan"
+  | "blender"
+  | "oven";
 
 export type IngredientSource = "sample" | "manual" | "photo";
 
@@ -21,7 +26,7 @@ export interface RecipeIngredientRequirement {
   key: string;
   /** Human-readable quantity + name shown on the recipe card (e.g. "1–2 eggs") */
   label: string;
-  /** Minimum numeric count required if user provides a pure count (defaults to 1) */
+  /** Minimum numeric count required if user provides a numeric quantity (defaults to > 0) */
   minCount?: number;
 }
 
@@ -36,6 +41,8 @@ export interface Recipe {
   ingredientRequirements: RecipeIngredientRequirement[];
   timeMinutes: number;
   equipment: EquipmentId | "none";
+  /** Optional list when a recipe requires multiple appliances (e.g. Microwave + frying pan) */
+  requiredEquipment?: EquipmentId[];
   equipmentLabel: string;
   panNote?: string;
   imageUrl?: string;

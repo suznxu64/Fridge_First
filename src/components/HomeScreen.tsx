@@ -215,12 +215,12 @@ export function HomeScreen({
             </p>
           </div>
           <span className="text-xs font-medium text-[#525E56] tabular-nums">
-            {RECIPES.length} starter recipes
+            6 featured · {RECIPES.length} total recipes
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-          {RECIPES.map((recipe) => (
+          {RECIPES.slice(0, 6).map((recipe) => (
             <div
               key={recipe.id}
               className="flex flex-col overflow-hidden rounded-2xl border border-[#E2DDD2] bg-white"
