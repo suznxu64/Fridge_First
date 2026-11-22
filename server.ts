@@ -3,7 +3,7 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,51 +77,110 @@ async function startServer() {
         },
       });
 
-      const response = await ai.models.generateContent({
-        model: "gemini-4-hydrogen",
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType: mimeType === "image/jpg" ? "image/jpeg" : mimeType,
-                data: imageBase64,
-              },
-            },
-            {
-              text: [
-                "Identify only the clearly visible food ingredients in this fridge or kitchen photo.",
-                "Return short, plain ingredient names in lowercase, including a simple count or container when clearly visible (for example: '1 bag spinach', '4 eggs', '1 block cheese', 'milk', '2 tortillas').",
-                "Do not guess hidden items, brand names, or pantry staples that you cannot see.",
-                "If no food ingredients are clearly visible, return an empty ingredients array.",
-              ].join(" "),
-            },
-          ],
-        },
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              ingredients: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.STRING,
-                },
-                description: "Short, plain names of clearly visible food ingredients.",
-              },
-            },
-            required: ["ingredients"],
+      const mimeToSend = mimeType === "image/jpg" ? "image/jpeg" : mimeType;
+      const promptText = [
+        "Identify only the clearly visible food ingredients in this fridge or kitchen photo.",
+        "Return short, plain ingredient names in lowercase, including a simple count or container when clearly visible (for example: '1 bag spinach', '4 eggs', '1 block cheese', 'milk', '2 tortillas').",
+        "Do not guess hidden items, brand names, or pantry staples that you cannot see.",
+        "If no food ingredients are clearly visible, return an empty ingredients array.",
+      ].join(" ");
+
+      const parts = [
+        {
+          inlineData: {
+            mimeType: mimeToSend,
+            data: imageBase64,
           },
         },
-      });
+        { text: promptText },
+      ];
 
-      const rawText = (response.text ?? "{}").trim();
-      const cleanedJson = rawText
+      const responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          ingredients: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.STRING,
+            },
+            description: "Short, plain names of clearly visible food ingredients.",
+          },
+        },
+        required: ["ingredients"],
+      };
+
+      const preferredModel = process.env.GEMINI_MODEL?.trim();
+      const candidateModels = preferredModel
+        ? [preferredModel]
+        : ["gemini-4-hydrogen", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
+
+      let responseText = "";
+      let lastError: unknown = null;
+
+      for (const modelName of candidateModels) {
+        try {
+          const isGemini4 = modelName.startsWith("gemini-4") || modelName.startsWith("gemini-3");
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: { parts },
+            config: {
+              abortSignal: AbortSignal.timeout(9000),
+              ...(isGemini4
+                ? {
+                    thinkingConfig: {
+                      thinkingLevel:
+                        modelName === "gemini-3.1-flash-lite"
+                          ? ThinkingLevel.MINIMAL
+                          : ThinkingLevel.LOW,
+                    },
+                  }
+                : {}),
+              responseMimeType: "application/json",
+              responseSchema,
+            },
+          });
+          responseText = (response.text ?? "{}").trim();
+          lastError = null;
+          break;
+        } catch (err: unknown) {
+          lastError = err;
+          const errObj = err as { name?: string; status?: number; message?: string };
+          const status = typeof errObj?.status === "number" ? errObj.status : 0;
+          const msg = typeof errObj?.message === "string" ? errObj.message : "";
+          const canTryNextModel =
+            errObj?.name === "AbortError" ||
+            errObj?.name === "TimeoutError" ||
+            status === 404 ||
+            status === 429 ||
+            status === 500 ||
+            status === 503 ||
+            status === 504 ||
+            msg.includes("NOT_FOUND") ||
+            msg.includes("is not found") ||
+            msg.includes("UNAVAILABLE") ||
+            msg.includes("high demand") ||
+            msg.includes("RESOURCE_EXHAUSTED") ||
+            msg.includes("aborted") ||
+            msg.includes("timeout");
+          if (!canTryNextModel) {
+            throw err;
+          }
+        }
+      }
+
+      if (lastError) {
+        throw lastError;
+      }
+
+      const cleanedJson = responseText
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/i, "")
         .replace(/\s*```$/, "")
         .trim();
-      const parsed = JSON.parse(cleanedJson || "{}") as { ingredients?: unknown };
+      const jsonObjectMatch = cleanedJson.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jsonObjectMatch ? jsonObjectMatch[0] : "{}") as {
+        ingredients?: unknown;
+      };
       const rawList = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
 
       const seen = new Set<string>();
@@ -137,14 +196,21 @@ async function startServer() {
       res.json({ ingredients });
     } catch (error: unknown) {
       console.error("Ingredient recognition error:", error);
-      const errObj = error as { status?: number; message?: string };
+      const errObj = error as { status?: number; code?: string | number; message?: string };
       const status = typeof errObj?.status === "number" ? errObj.status : 502;
-      const msg = typeof errObj?.message === "string" ? errObj.message : "";
+      const msg = typeof errObj?.message === "string" ? errObj.message : String(error ?? "");
+      const safeDetail = msg.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 260);
 
-      if (status === 400 || status === 403 || msg.includes("API_KEY_INVALID") || msg.includes("PERMISSION_DENIED")) {
+      if (
+        status === 400 ||
+        status === 403 ||
+        msg.includes("API_KEY_INVALID") ||
+        msg.includes("PERMISSION_DENIED")
+      ) {
         res.status(status === 400 || status === 403 ? status : 403).json({
           error:
             "Gemini photo recognition is not authorized with the current API key. Check or select your API key in Settings > Secrets.",
+          detail: safeDetail,
         });
         return;
       }
@@ -153,6 +219,16 @@ async function startServer() {
         res.status(429).json({
           error:
             "Photo recognition quota is temporarily reached. Try again shortly, or type your ingredients instead.",
+          detail: safeDetail,
+        });
+        return;
+      }
+
+      if (status === 503 || msg.includes("UNAVAILABLE") || msg.includes("high demand")) {
+        res.status(503).json({
+          error:
+            "Gemini photo recognition is temporarily busy due to high demand. Please try again in a few seconds, or type your ingredients instead.",
+          detail: safeDetail,
         });
         return;
       }
@@ -160,6 +236,7 @@ async function startServer() {
       res.status(502).json({
         error:
           "We could not read ingredients from that photo right now. You can type your ingredients or try the sample fridge instead.",
+        detail: `status=${status}${errObj?.code ? ` code=${errObj.code}` : ""} ${safeDetail}`.trim(),
       });
     }
   });
